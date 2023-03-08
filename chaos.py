@@ -21,7 +21,7 @@ class Agent:
 def init_agents(population, length):
     return [Agent(length) for _ in range(population)]
 
-def ga():
+def ga(selection_pressure,method):
 
     agents = init_agents(population, in_str_len)
 
@@ -55,7 +55,7 @@ def ga():
             print('Bazinga!')
             break
 
-        agents = rank_selection(agents)
+        agents = rank_selection(agents,selection_pressure,method)
         agents = crossover(agents)
         agents = mutation(agents)
     agents = sorted(agents, key=lambda agent: agent.fitness, reverse=True)
@@ -93,10 +93,13 @@ def fitness(agents):
 
 #TODO: I need to make the ranking based selection, 
 
-def rank_selection(agents,selection_pressure=1.5):
+def rank_selection(agents,selection_pressure=1.5,method=1):
     #s=[1,2]
     s=selection_pressure
     current_rank=0
+    if(method==1 and (selection_pressure<1 or selection_pressure >2)):
+        print("wrong combination for selection pressure and probability calculation methd")
+        return 
     agents = sorted(agents, key=lambda agent: agent.fitness)
     print('\n'.join(map(str, agents)))
     print("-------------")
@@ -112,10 +115,14 @@ def rank_selection(agents,selection_pressure=1.5):
 
     # print('\n'.join(map(str, ranks)))
     # print("----------")
-    
-    for rank in ranks:
-        temp=((2-selection_pressure)/n)+(2*rank*(selection_pressure-1))/(n*(n-1))
-        prob.append(temp)
+    if(method==1):
+        for rank in ranks:
+            temp=((2-selection_pressure)/n)+(2*rank*(selection_pressure-1))/(n*(n-1))
+            prob.append(temp)
+    else:
+        for rank in ranks:
+            temp=1-math.exp(-rank)
+            prob.append(temp)
     for i in range(1,n):
         prob[i]=prob[i-1]+prob[i]
 
@@ -252,7 +259,7 @@ in_str_len = None
 population = 20
 generations = 100000
 
-# plaintext = input('Enter Message: ')
-plaintext = 'abcdefghij'*100
-best_found=ga()
+plaintext = input('Enter Message: ')
+# plaintext = 'abcdefghij'*100
+best_found=ga(selection_pressure=1.2,method=1)
 print(encrypt(plaintext,best_found.params[0],best_found.params[1]))
