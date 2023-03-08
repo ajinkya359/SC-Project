@@ -31,27 +31,35 @@ def ga():
 
         temp_fitness = []
         
+        #calculate the fitness of all agents.
         agents = fitness(agents)
 
         for agent in agents:
+            #storing the correct fitness
             temp_fitness.append(agent.fitness)
 
         # print(temp_fitness)
 
         current_max_fitness = max(temp_fitness)
-
+        
+        #count the number of agents with max fitness.
         count = temp_fitness.count(current_max_fitness)
 
+        
         print('Current_max_fitness',current_max_fitness)
         print('Count: ',count)
 
+        #if more than 50% of the population has the max fitness which is above the threshold then stop the procedure or 
+        #else repeat .
         if count/len(agents) >= 0.5 and current_max_fitness >= 90:
             print('Bazinga!')
             break
 
-        agents = selection(agents)
+        agents = rank_selection(agents)
         agents = crossover(agents)
         agents = mutation(agents)
+    agents = sorted(agents, key=lambda agent: agent.fitness, reverse=True)
+    return agents[0]
 
 
 
@@ -69,12 +77,13 @@ def ani_jackard(s1,s2):
 
 
 def fitness(agents):
-
+    print("a=",agents[0])
     for agent in agents:
 
         a = agent.params[0]
         d = agent.params[1]
-
+        
+        #every agent has Params: [1.4282256077720765, 3.487416630353859] Fitness: 99.84939759036145
         cipher = encrypt(plaintext,a,d)
 
         # agent.fitness = 100-fuzz.ratio(plaintext,cipher)
@@ -82,10 +91,63 @@ def fitness(agents):
 
     return agents
 
+#TODO: I need to make the ranking based selection, 
+
+def rank_selection(agents,selection_pressure=1.5):
+    #s=[1,2]
+    s=selection_pressure
+    current_rank=0
+    agents = sorted(agents, key=lambda agent: agent.fitness)
+    print('\n'.join(map(str, agents)))
+    print("-------------")
+    ranks=[]
+    ranks.append(current_rank)
+    for i in range(1,len(agents)):
+        if(agents[i-1].fitness<agents[i].fitness):
+            current_rank+=1
+        ranks.append(current_rank)
+    prob=[]
+
+    n=len(agents)
+
+    # print('\n'.join(map(str, ranks)))
+    # print("----------")
+    
+    for rank in ranks:
+        temp=((2-selection_pressure)/n)+(2*rank*(selection_pressure-1))/(n*(n-1))
+        prob.append(temp)
+    for i in range(1,n):
+        prob[i]=prob[i-1]+prob[i]
+
+    # print('\n'.join(map(str, prob)))
+    # print("---------------")
+    
+    next_gen_size=int(0.2*(n))
+    
+    next_gen=[]
+    for i in range(0,next_gen_size):
+        r=random.uniform(0,1)
+        k=0
+        for j in range(n):
+            if(prob[j]<r):
+                k+=1
+        if(k>=n):
+            k=n-1
+        next_gen.append(agents[k])
+    
+    print('\n'.join(map(str, next_gen)))
+    print("-----------------")
+    return next_gen
+
 def selection(agents):
+    #we are getting the individuals with best fitness, can be multiple of them here. We are getting the 
+    #ones with the best fitness.
     agents = sorted(agents, key=lambda agent: agent.fitness, reverse=True)
     print('\n'.join(map(str, agents)))
+    #leading the the decrease in the diversity.
     agents = agents[:int(0.2 * len(agents))]
+    print("------------")
+    print('\n'.join(map(str, agents)))
     return agents
 
 def crossover(agents):
@@ -192,4 +254,5 @@ generations = 100000
 
 # plaintext = input('Enter Message: ')
 plaintext = 'abcdefghij'*100
-ga()
+best_found=ga()
+print(encrypt(plaintext,best_found.params[0],best_found.params[1]))
