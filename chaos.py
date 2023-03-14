@@ -257,7 +257,7 @@ def encrypt(plaintext,a,d):
 in_str = None
 in_str_len = None
 population = 20
-generations = 100000
+generations = 10
 
 plaintext = input('Enter Message: ')
 # plaintext = 'abcdefghij'*100
